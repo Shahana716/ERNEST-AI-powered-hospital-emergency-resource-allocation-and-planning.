@@ -1,0 +1,1561 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CareFlow · Hospital Resource &amp; Emergency Capacity Planner</title>
+  <link rel="icon" href="data:,">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #EAF7FC;
+      --primary: #238C91;
+      --dark-teal: #176B72;
+      --navy: #102A43;
+      --white: #FFFFFF;
+      --mint: #D8F3E8;
+      --green: #27A878;
+      --amber: #F2B84B;
+      --red: #E45B5B;
+      --mute: #5a758d;
+    }
+    body {
+      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+      color: var(--navy);
+      background: linear-gradient(180deg, #d8eef8 0%, #e6f5fb 40%, #EAF7FC 100%) fixed;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 10px 30px rgba(16, 42, 67, 0.07);
+      border-radius: 20px;
+    }
+    .hero {
+      background: linear-gradient(135deg, #176B72 0%, #238C91 100%);
+      color: #fff;
+      border-radius: 24px;
+      box-shadow: 0 12px 34px rgba(23, 107, 114, 0.28);
+    }
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.55rem 1.3rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn:hover {
+      background: var(--dark-teal);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background: #fff;
+      color: var(--primary);
+      border: 1px solid #c9e3ed;
+      border-radius: 999px;
+      padding: 0.45rem 1.1rem;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .btn-secondary:hover {
+      background: #f1f9fc;
+      border-color: var(--primary);
+    }
+    .pill {
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.82rem;
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid #d4e7f2;
+      color: var(--navy);
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .pill:hover {
+      background: #fff;
+    }
+    .pill.on {
+      background: #fff;
+      font-weight: 600;
+      color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(35, 140, 145, 0.18);
+    }
+    .inp {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #cce1ec;
+      border-radius: 12px;
+      padding: 0.4rem 0.75rem;
+      outline: none;
+      color: var(--navy);
+      font-size: 0.88rem;
+    }
+    .inp:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(35, 140, 145, 0.2);
+    }
+    .tile {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(16, 42, 67, 0.06);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .tile:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(16, 42, 67, 0.1);
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1.1rem;
+      border-radius: 16px;
+      color: var(--mute);
+      width: 100%;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .nav:hover {
+      color: var(--primary);
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .nav.on {
+      background: #fff;
+      color: var(--primary);
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(16, 42, 67, 0.08);
+    }
+    th {
+      font-weight: 500;
+      color: var(--mute);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-align: left;
+      padding: 0.6rem 0.5rem;
+    }
+    td {
+      padding: 0.65rem 0.5rem;
+      border-top: 1px solid #e3edf4;
+    }
+    .bar {
+      height: 9px;
+      border-radius: 10px;
+      background: #dbeaf2;
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #50c39f, #27A878);
+      transition: width 0.4s ease;
+    }
+    .bar i.amber {
+      background: linear-gradient(90deg, #f7cd75, #F2B84B);
+    }
+    .bar i.red {
+      background: linear-gradient(90deg, #ee7676, #E45B5B);
+    }
+    .fade {
+      animation: f 0.25s ease-out;
+    }
+    @keyframes f {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .allocation-box {
+      background: linear-gradient(135deg, #f5fbff 0%, #edf8f8 100%);
+      border: 2px solid #238C91;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(35, 140, 145, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Detail Drawer / Modal Root -->
+  <div id="modal-root"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+
+// Helper constructors
+const P = (id, severity, waiting_time, unit, ventilator = false, surgery = false) => ({
+  id, severity, waiting_time, unit, ventilator, surgery
+});
+const R = (a, b, c, d, e, f, g) => ({
+  icu_beds: a, emergency_beds: b, general_beds: c,
+  ventilators: d, operating_rooms: e, doctors: f, nurses: g
+});
+
+// Presets
+const PRE = {
+  'Sample (4 patients)': [
+    [
+      P('P1', 'critical', 10, 'icu', true),
+      P('P2', 'critical', 5, 'icu', false, true),
+      P('P3', 'serious', 20, 'emergency'),
+      P('P4', 'moderate', 30, 'general')
+    ],
+    R(2, 1, 1, 1, 1, 2, 3)
+  ],
+  'Mass casualty': [
+    [
+      P('P1', 'critical', 0, 'icu', true),
+      P('P2', 'critical', 0, 'icu', false, true),
+      P('P3', 'critical', 5, 'icu', true),
+      P('P4', 'serious', 10, 'emergency', false, true),
+      P('P5', 'serious', 15, 'emergency'),
+      P('P6', 'serious', 20, 'emergency'),
+      P('P7', 'moderate', 30, 'general'),
+      P('P8', 'moderate', 30, 'general')
+    ],
+    R(2, 2, 2, 1, 1, 3, 4)
+  ],
+  'Resource shortage': [
+    [
+      P('P1', 'critical', 20, 'icu', true),
+      P('P2', 'critical', 10, 'icu', true),
+      P('P3', 'serious', 10, 'emergency')
+    ],
+    R(1, 1, 1, 1, 1, 1, 2)
+  ],
+  'Enough for everyone': [
+    [
+      P('P1', 'critical', 5, 'icu', true),
+      P('P2', 'serious', 5, 'emergency'),
+      P('P3', 'moderate', 5, 'general')
+    ],
+    R(2, 2, 2, 2, 2, 4, 6)
+  ],
+  'Infeasible (no ventilator)': [
+    [
+      P('P1', 'critical', 10, 'icu', true),
+      P('P2', 'moderate', 5, 'general')
+    ],
+    R(1, 1, 1, 0, 1, 2, 2)
+  ]
+};
+
+const LBL = {
+  icu_beds: 'ICU Beds',
+  emergency_beds: 'Emergency Beds',
+  general_beds: 'General Beds',
+  ventilators: 'Ventilators',
+  operating_rooms: 'Operating Rooms',
+  doctors: 'Doctors',
+  nurses: 'Nurses'
+};
+const UK = { icu: 'icu_beds', emergency: 'emergency_beds', general: 'general_beds' };
+const SEV = {
+  critical: ['#fee2e2', '#b91c1c'],
+  serious: ['#fef3c7', '#b45309'],
+  moderate: ['#d1fae5', '#065f46']
+};
+const BED_STATUS_COLORS = {
+  AVAILABLE: ['#D8F3E8', '#176B72'],
+  OCCUPIED: ['#fee2e2', '#b91c1c'],
+  RESERVED: ['#fef3c7', '#b45309'],
+  MAINTENANCE: ['#e2e8f0', '#475569']
+};
+
+const IC = {
+  home: 'M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z',
+  users: 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.9',
+  res: 'M12 2l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5',
+  play: 'M5 3l14 9-14 9z',
+  chart: 'M18 20V10M12 20V4M6 20v-6',
+  out: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  check: 'M20 6L9 17l-5-5',
+  alert: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+  bed: 'M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9',
+  refresh: 'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+  search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2l-4.35-4.35'
+};
+const ic = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
+
+const TABS = [
+  ['home', 'Overview', 'home'],
+  ['resources', 'Hospital Capacity', 'res'],
+  ['patients', 'Patients & Allocation', 'users'],
+  ['planner', 'AI Planner', 'play'],
+  ['analytics', 'Analytics', 'chart']
+];
+
+const first = Object.keys(PRE)[0];
+
+// Application state
+const S = {
+  user: JSON.parse(localStorage.hp_user || 'null'),
+  tab: 'home',
+  preset: first,
+  pts: structuredClone(PRE[first][0]),
+  res: structuredClone(PRE[first][1]),
+  algo: 'astar',
+  q: '',
+  f: 'all',
+  busy: false,
+  err: '',
+  r: null,
+  all: null,
+  hist: JSON.parse(localStorage.hp_hist || '[]'),
+  online: null,
+
+  // Hospital Capacity Module State
+  hospital: null,
+  hospitalLoading: false,
+  hospitalError: '',
+  expandedWards: new Set(),
+  expandedRooms: new Set(),
+  resSearch: '',
+  resWardFilter: 'all',
+  resAvailFilter: 'all',
+  drawerItem: null, // { type: 'ward' | 'room' | 'bed' | 'patient', data: any }
+  selectedPatientDetail: null
+};
+
+const badge = s => `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize" style="background:${SEV[s] ? SEV[s][0] : '#f1f5f9'};color:${SEV[s] ? SEV[s][1] : '#475569'}">${s}</span>`;
+const bedBadge = st => `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide" style="background:${BED_STATUS_COLORS[st]?.[0] || '#f1f5f9'};color:${BED_STATUS_COLORS[st]?.[1] || '#475569'}">${st}</span>`;
+
+const demand = () => {
+  const d = Object.fromEntries(Object.keys(LBL).map(k => [k, 0]));
+  S.pts.forEach(p => {
+    d[UK[p.unit]]++;
+    d.ventilators += +p.ventilator;
+    d.operating_rooms += +p.surgery;
+    d.doctors++;
+    d.nurses++;
+  });
+  return d;
+};
+
+const pct = (u, c) => c ? Math.min(100, Math.round(u / c * 100)) : (u ? 100 : 0);
+const bar = (u, c) => {
+  const p = pct(u, c);
+  const cls = p >= 85 ? 'red' : p >= 65 ? 'amber' : '';
+  return `<div class="bar"><i class="${cls}" style="width:${p}%"></i></div>`;
+};
+
+// Fetch complete hospital capacity data from backend
+async function fetchHospital() {
+  S.hospitalLoading = true;
+  try {
+    const res = await fetch('/api/hospital');
+    if (res.ok) {
+      S.hospital = await res.json();
+      S.hospitalError = '';
+    } else {
+      S.hospitalError = 'Failed to load hospital data.';
+    }
+  } catch (e) {
+    S.hospitalError = e.message || 'Hospital API offline';
+  } finally {
+    S.hospitalLoading = false;
+    render();
+  }
+}
+
+async function resetHospital() {
+  try {
+    await fetch('/api/hospital/reset', { method: 'POST' });
+    await fetchHospital();
+  } catch (e) {
+    alert('Failed to reset hospital: ' + e.message);
+  }
+}
+
+function setPreset(k) {
+  S.preset = k;
+  S.pts = structuredClone(PRE[k][0]);
+  S.res = structuredClone(PRE[k][1]);
+  S.r = S.all = null;
+  render();
+}
+
+function login() {
+  return `<div class="min-h-screen flex items-center justify-center p-5">
+    <div class="glass p-8 w-full max-w-sm fade">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#D8F3E8] text-[#176B72] font-semibold tracking-wider">CAREFLOW</span>
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">Simulation Environment</span>
+      </div>
+      <h1 class="text-3xl font-bold mt-1 text-[#102A43]">Emergency<br>Resource Planner</h1>
+      <p class="text-sm text-[#5a758d] mt-2 mb-6">State-space search, A* planning &amp; hospital capacity management.</p>
+      <input id="un" class="inp w-full mb-3" placeholder="Your name (e.g., Dr. Priya)">
+      <select id="role" class="inp w-full mb-3">
+        <option>Emergency Coordinator</option>
+        <option>Hospital Administrator</option>
+        <option>Academic Evaluator / Viva</option>
+      </select>
+      <input class="inp w-full mb-5" type="password" placeholder="Password (demo, any value)">
+      <button class="btn w-full justify-center text-sm py-2.5" onclick="doLogin()">Enter Command Center</button>
+      <p class="text-[11px] text-[#5a758d] mt-4 leading-relaxed">Simulated hospital environment. Severities and resource demands are given inputs, not clinical triage decisions.</p>
+    </div>
+  </div>`;
+}
+
+function doLogin() {
+  const n = $('#un').value.trim();
+  if (!n) { $('#un').style.borderColor = '#E45B5B'; return; }
+  S.user = { name: n, role: $('#role').value };
+  localStorage.hp_user = JSON.stringify(S.user);
+  S.tab = 'home';
+  fetchHospital();
+  render();
+}
+
+function logout() {
+  localStorage.removeItem('hp_user');
+  S.user = null;
+  render();
+}
+
+function shell() {
+  const t = TABS.find(x => x[0] == S.tab);
+  return `<div class="flex min-h-screen">
+    <aside class="hidden md:flex flex-col w-64 p-4 gap-1.5 sticky top-0 h-screen border-r border-white/60">
+      <div class="px-3 py-4">
+        <div class="flex items-center gap-2">
+          <p class="text-xs tracking-widest text-[#238C91] font-bold">CAREFLOW</p>
+          <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-semibold">SIMULATION</span>
+        </div>
+        <p class="font-bold text-lg text-[#102A43]">Command Center</p>
+      </div>
+      ${TABS.map(x => `<button class="nav ${S.tab == x[0] ? 'on' : ''}" onclick="go('${x[0]}')">${ic(x[2])}${x[1]}</button>`).join('')}
+      
+      <div class="mt-auto p-3 rounded-2xl bg-white/70 border border-white mb-2 text-xs text-[#5a758d]">
+        <p class="font-semibold text-[#102A43] mb-1">Simulated Hospital</p>
+        <p class="text-[11px]">St. Jude Metropolitan Medical Center</p>
+        <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
+          <span>Simulation Mode</span>
+          <span class="text-emerald-600 font-bold">ACTIVE</span>
+        </div>
+      </div>
+      <button class="nav text-red-700 hover:text-red-800" onclick="logout()">${ic('out')}Sign out</button>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 pb-28 max-w-6xl">
+      <header class="flex flex-wrap items-center gap-3 mb-6">
+        <div class="mr-auto">
+          <p class="text-xs font-medium text-[#5a758d]">Hello, ${S.user.name} · ${S.user.role}</p>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-[#102A43]">${t[1]}</h1>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 font-semibold border border-sky-200">Simulation Environment</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-[#5a758d] font-medium">Scenario:</label>
+          <select class="inp text-xs font-medium" onchange="setPreset(this.value)">
+            ${Object.keys(PRE).map(k => `<option ${k == S.preset ? 'selected' : ''}>${k}</option>`).join('')}
+          </select>
+        </div>
+        <span class="pill font-medium" style="color:${S.online ? '#27A878' : '#E45B5B'}">
+          ● ${S.online === null ? 'checking' : S.online ? 'API online' : 'API offline'}
+        </span>
+      </header>
+      <section class="fade">${VIEW[S.tab]()}</section>
+    </main>
+  </div>
+  <nav class="md:hidden fixed bottom-0 inset-x-0 glass !rounded-b-none flex justify-around py-2 z-30">
+    ${TABS.map(x => `<button class="flex flex-col items-center text-[10px] ${S.tab == x[0] ? 'text-[#238C91] font-bold' : 'text-[#5a758d]'}" onclick="go('${x[0]}')">${ic(x[2], 20)}${x[1].split(' ')[0]}</button>`).join('')}
+  </nav>
+  ${renderModal()}`;
+}
+
+const go = t => {
+  S.tab = t;
+  render();
+  scrollTo(0, 0);
+};
+
+function render() {
+  $('#app').innerHTML = S.user ? shell() : login();
+}
+
+const card = (l, v, sub = '') => `<div class="glass p-4">
+  <p class="text-xs font-medium text-[#5a758d] uppercase tracking-wider">${l}</p>
+  <p class="text-2xl font-bold mt-1 text-[#102A43]">${v}</p>
+  ${sub ? `<p class="text-xs text-[#5a758d] mt-0.5">${sub}</p>` : ''}
+</div>`;
+
+function insights() {
+  const d = demand(), o = [];
+  S.pts.forEach(p => {
+    [[UK[p.unit]], p.ventilator ? ['ventilators'] : [], p.surgery ? ['operating_rooms'] : []].flat().forEach(k => {
+      if (S.res[k] < 1) o.push(['Infeasible Scenario', `${p.id} needs ${LBL[k]} but total scenario capacity is 0.`, 1]);
+    });
+  });
+  Object.keys(LBL).forEach(k => {
+    if (d[k] > S.res[k] && S.res[k] > 0) o.push(['Capacity Pressure', `${LBL[k]}: demand ${d[k]} exceeds simultaneous capacity ${S.res[k]}. The AI plan must sequence admission &amp; release.`, 0]);
+  });
+  const c = S.pts.filter(p => p.severity == 'critical').length;
+  if (c) o.push(['Acuity Weighting', `${c} critical patient(s) carry highest waiting penalty (weight 10 + wait//10 vs 5/2).`, 0]);
+  return o.length ? o : [['All Clear', 'Scenario capacity covers all waiting patients at once.', 0]];
+}
+
+// ==========================================
+// VIEW DEFINITIONS
+// ==========================================
+const VIEW = {
+  // 1. OVERVIEW / HOME DASHBOARD
+  home() {
+    const c = S.pts.filter(p => p.severity == 'critical').length;
+    const d = demand();
+    const hs = S.hospital ? S.hospital.summary : {
+      total_wards: 6, total_rooms: 42, total_beds: 120,
+      available_beds: 28, occupied_beds: 82, reserved_beds: 6,
+      beds_under_maintenance: 4, today_discharges: 8
+    };
+
+    // Calculate how many scenario patients are allocated vs waiting
+    const allocCount = S.r && S.r.patient_allocations ? S.r.patient_allocations.filter(a => a.status === 'allocated').length : 0;
+    const waitCount = S.pts.length - allocCount;
+
+    return `
+      <!-- Top Scenario Banner -->
+      <div class="hero p-6 mb-6">
+        <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
+          <div>
+            <span class="text-xs uppercase tracking-wider text-teal-100 font-semibold">Active Emergency Scenario</span>
+            <h2 class="text-3xl font-bold mt-0.5">${S.preset}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn bg-white/20 hover:bg-white/30 text-white text-xs border border-white/30" onclick="go('planner')">Run AI Planner</button>
+            <button class="btn bg-white text-[#176B72] hover:bg-teal-50 text-xs font-semibold" onclick="go('resources')">Hospital Management</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="rounded-2xl bg-white/15 py-3">
+            <p class="text-2xl font-bold">${S.pts.length}</p>
+            <p class="text-xs text-teal-100">Patients in Queue</p>
+          </div>
+          <div class="rounded-2xl bg-white/15 py-3">
+            <p class="text-2xl font-bold">${c}</p>
+            <p class="text-xs text-teal-100">Critical Acuity</p>
+          </div>
+          <div class="rounded-2xl bg-white/15 py-3">
+            <p class="text-2xl font-bold">${allocCount}</p>
+            <p class="text-xs text-teal-100">Allocated</p>
+          </div>
+          <div class="rounded-2xl bg-white/15 py-3">
+            <p class="text-2xl font-bold">${S.r && S.r.success ? S.r.total_cost : '—'}</p>
+            <p class="text-xs text-teal-100">Solution Cost</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hospital Summary Section -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-lg text-[#102A43]">Simulated Hospital Capacity</h3>
+            <p class="text-xs text-[#5a758d]">Live capacity summary from hospital data model</p>
+          </div>
+          <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border">Simulation Data</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          ${card('Total Wards', hs.total_wards)}
+          ${card('Total Rooms', hs.total_rooms)}
+          ${card('Total Beds', hs.total_beds)}
+          ${card('Available', hs.available_beds, 'Beds free')}
+          ${card('Occupied', hs.occupied_beds, `${Math.round(hs.occupied_beds/hs.total_beds*100)}% load`)}
+          ${card("Today's Discharges", hs.today_discharges, 'Patient turnover')}
+        </div>
+      </div>
+
+      <!-- Quick Nav Tiles -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        ${[
+          ['res', 'Hospital Capacity', 'resources', 'Manage wards, rooms, & beds'],
+          ['users', 'Patient Allocation', 'patients', 'View Final Ward/Room/Bed'],
+          ['play', 'AI Planner', 'planner', 'A*, UCS, & BFS search engine'],
+          ['chart', 'Live Analytics', 'analytics', 'Algorithm benchmarking']
+        ].map(x => `
+          <button class="tile text-[#238C91] text-left flex flex-col justify-between" onclick="go('${x[2]}')">
+            <div class="flex items-center justify-between mb-3">
+              <span class="p-2.5 rounded-xl bg-teal-50 text-[#238C91]">${ic(x[0], 22)}</span>
+              <span class="text-xs text-[#5a758d] font-bold">→</span>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-[#102A43]">${x[1]}</p>
+              <p class="text-[11px] text-[#5a758d]">${x[3]}</p>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- Dual Split: Demand vs Capacity & Pre-flight insights -->
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="glass p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-[#102A43]">Scenario Demand vs Capacity</h3>
+            <button class="text-xs text-[#238C91] font-semibold hover:underline" onclick="go('resources')">Configure</button>
+          </div>
+          ${Object.keys(LBL).map(k => `
+            <div class="mb-3">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium text-[#102A43]">${LBL[k]}</span>
+                <span class="text-[#5a758d]">${d[k]} needed · ${S.res[k]} available</span>
+              </div>
+              ${bar(d[k], S.res[k])}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="glass p-5">
+          <h3 class="font-bold text-[#102A43] mb-3">Triage &amp; Pre-flight Insights</h3>
+          ${insights().map(i => `
+            <div class="rounded-2xl p-3.5 mb-2.5 ${i[2] ? 'bg-red-50 border border-red-100' : 'bg-[#D8F3E8] border border-emerald-100'}">
+              <p class="text-xs font-bold ${i[2] ? 'text-red-700' : 'text-[#176B72]'} flex items-center gap-1.5">
+                ${ic(i[2] ? 'alert' : 'check', 14)} ${i[0]}
+              </p>
+              <p class="text-xs text-[#102A43] mt-0.5 leading-relaxed">${i[1]}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  // 2. COMPLETE HOSPITAL RESOURCE & CAPACITY MANAGEMENT
+  resources() {
+    if (S.hospitalLoading && !S.hospital) {
+      return `<div class="glass p-12 text-center text-[#5a758d] animate-pulse">Loading hospital capacity data from simulation engine...</div>`;
+    }
+    if (S.hospitalError && !S.hospital) {
+      return `<div class="glass p-6 bg-red-50 text-red-700"><b>Error:</b> ${S.hospitalError} <button class="btn text-xs ml-4" onclick="fetchHospital()">Retry</button></div>`;
+    }
+
+    const h = S.hospital || {};
+    const sum = h.summary || {
+      total_wards: 6, total_rooms: 42, total_beds: 120,
+      available_beds: 28, occupied_beds: 82, reserved_beds: 6,
+      beds_under_maintenance: 4, total_patients: 82,
+      current_admissions: 14, today_discharges: 8, expected_discharges: 12,
+      pending_discharges: 6, beds_expected_to_become_available: 18
+    };
+
+    const wards = h.wards || [];
+    const rooms = h.rooms || [];
+    const beds = h.beds || [];
+    const inv = h.resource_inventory || {};
+    const discharges = h.discharges || [];
+    const analytics = h.analytics || {};
+
+    // Filtered rooms and beds
+    const q = S.resSearch.toLowerCase();
+    const filteredWards = wards.filter(w => S.resWardFilter === 'all' || w.ward_id === S.resWardFilter || w.type === S.resWardFilter);
+
+    return `
+      <!-- Sub-header & Action Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div>
+          <h2 class="text-xl font-bold text-[#102A43]">Hospital Resource &amp; Capacity Management</h2>
+          <p class="text-xs text-[#5a758d]">St. Jude Metropolitan Medical Center · <span class="text-emerald-700 font-semibold">Simulation Data</span></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary text-xs" onclick="resetHospital()">${ic('refresh', 14)} Reset to Baseline</button>
+          <button class="btn text-xs" onclick="fetchHospital()">${ic('refresh', 14)} Refresh Capacity</button>
+        </div>
+      </div>
+
+      <!-- SECTION A: HOSPITAL SUMMARY -->
+      <div class="glass p-5 mb-6">
+        <div class="flex items-center justify-between mb-3 border-b pb-2">
+          <h3 class="font-bold text-sm text-[#102A43] uppercase tracking-wider">Hospital Overview &amp; Summary</h3>
+          <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-teal-50 text-[#176B72] font-semibold border border-teal-100">Live Simulation Model</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-4 text-center">
+          <div class="p-3 rounded-xl bg-slate-50 border"><p class="text-xs text-[#5a758d]">Total Wards</p><p class="text-xl font-bold text-[#102A43] mt-0.5">${sum.total_wards}</p></div>
+          <div class="p-3 rounded-xl bg-slate-50 border"><p class="text-xs text-[#5a758d]">Total Rooms</p><p class="text-xl font-bold text-[#102A43] mt-0.5">${sum.total_rooms}</p></div>
+          <div class="p-3 rounded-xl bg-slate-50 border"><p class="text-xs text-[#5a758d]">Total Beds</p><p class="text-xl font-bold text-[#102A43] mt-0.5">${sum.total_beds}</p></div>
+          <div class="p-3 rounded-xl bg-[#D8F3E8] border border-emerald-200"><p class="text-xs text-[#176B72] font-semibold">Available Beds</p><p class="text-xl font-bold text-[#176B72] mt-0.5">${sum.available_beds}</p></div>
+          <div class="p-3 rounded-xl bg-red-50 border border-red-200"><p class="text-xs text-red-700 font-semibold">Occupied Beds</p><p class="text-xl font-bold text-red-700 mt-0.5">${sum.occupied_beds}</p></div>
+          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200"><p class="text-xs text-amber-800 font-semibold">Reserved Beds</p><p class="text-xl font-bold text-amber-800 mt-0.5">${sum.reserved_beds}</p></div>
+          <div class="p-3 rounded-xl bg-slate-100 border"><p class="text-xs text-slate-700 font-semibold">Maintenance</p><p class="text-xl font-bold text-slate-700 mt-0.5">${sum.beds_under_maintenance}</p></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center pt-2 border-t text-xs">
+          <div><span class="text-[#5a758d]">Total Patients:</span> <b class="text-[#102A43]">${sum.total_patients}</b></div>
+          <div><span class="text-[#5a758d]">Current Admissions:</span> <b class="text-[#102A43]">${sum.current_admissions}</b></div>
+          <div><span class="text-[#5a758d]">Today's Discharges:</span> <b class="text-[#27A878]">${sum.today_discharges}</b></div>
+          <div><span class="text-[#5a758d]">Expected Discharges:</span> <b class="text-[#238C91]">${sum.expected_discharges}</b></div>
+        </div>
+      </div>
+
+      <!-- SECTION H: SEARCH / FILTER CONTROLS -->
+      <div class="glass p-4 mb-6 flex flex-wrap gap-3 items-center">
+        <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+          <span class="text-[#5a758d]">${ic('search', 16)}</span>
+          <input class="inp w-full" placeholder="Search ward, room (e.g. ICU-02), or bed (e.g. GW-04-A)..."
+            value="${S.resSearch}" oninput="S.resSearch=this.value;render()">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-[#5a758d] font-medium">Ward:</label>
+          <select class="inp text-xs" onchange="S.resWardFilter=this.value;render()">
+            <option value="all">All Wards</option>
+            ${wards.map(w => `<option value="${w.ward_id}" ${S.resWardFilter == w.ward_id ? 'selected' : ''}>${w.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-[#5a758d] font-medium">Availability:</label>
+          <select class="inp text-xs" onchange="S.resAvailFilter=this.value;render()">
+            <option value="all" ${S.resAvailFilter == 'all' ? 'selected' : ''}>All Beds</option>
+            <option value="AVAILABLE" ${S.resAvailFilter == 'AVAILABLE' ? 'selected' : ''}>Available Beds Only</option>
+            <option value="OCCUPIED" ${S.resAvailFilter == 'OCCUPIED' ? 'selected' : ''}>Occupied Beds Only</option>
+            <option value="RESERVED" ${S.resAvailFilter == 'RESERVED' ? 'selected' : ''}>Reserved Beds Only</option>
+            <option value="MAINTENANCE" ${S.resAvailFilter == 'MAINTENANCE' ? 'selected' : ''}>Maintenance Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SECTION B, C, D: WARD OVERVIEW & ROOM/BED DRILL-DOWN -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-3">
+          <div>
+            <h3 class="font-bold text-lg text-[#102A43]">Hospital Wards</h3>
+            <p class="text-xs text-[#5a758d]">Click any ward to expand rooms and drill down into individual beds</p>
+          </div>
+          <span class="text-xs text-[#5a758d]">${filteredWards.length} wards displayed</span>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${filteredWards.map(w => {
+            const isExp = S.expandedWards.has(w.ward_id);
+            const wardRooms = rooms.filter(r => r.ward_id === w.ward_id);
+            const p = w.utilization_pct;
+            const barCls = p >= 85 ? 'red' : p >= 65 ? 'amber' : '';
+            const statusBg = p >= 85 ? 'bg-red-50 text-red-700 border-red-200' : p >= 65 ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200';
+
+            return `
+              <div class="glass p-5 flex flex-col justify-between transition-all">
+                <div>
+                  <div class="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 class="font-bold text-lg text-[#102A43]">${w.name}</h4>
+                      <p class="text-xs text-[#5a758d]">Type: <span class="capitalize font-medium">${w.type}</span></p>
+                    </div>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold border ${statusBg}">${w.status}</span>
+                  </div>
+
+                  <div class="grid grid-cols-4 gap-2 text-center my-3 p-2.5 rounded-xl bg-slate-50 border text-xs">
+                    <div><p class="text-[#5a758d]">Rooms</p><p class="font-bold text-[#102A43] mt-0.5">${w.total_rooms}</p></div>
+                    <div><p class="text-[#5a758d]">Beds</p><p class="font-bold text-[#102A43] mt-0.5">${w.total_beds}</p></div>
+                    <div><p class="text-red-700 font-semibold">Occupied</p><p class="font-bold text-red-700 mt-0.5">${w.occupied_beds}</p></div>
+                    <div><p class="text-emerald-700 font-semibold">Available</p><p class="font-bold text-emerald-700 mt-0.5">${w.available_beds}</p></div>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="flex justify-between text-xs mb-1">
+                      <span class="text-[#5a758d]">Utilization</span>
+                      <span class="font-bold text-[#102A43]">${w.utilization_pct}%</span>
+                    </div>
+                    <div class="bar"><i class="${barCls}" style="width:${w.utilization_pct}%"></i></div>
+                  </div>
+                </div>
+
+                <div class="pt-3 border-t flex justify-between items-center text-xs">
+                  <button class="text-[#238C91] font-semibold hover:underline" onclick="openDrawer('ward', '${w.ward_id}')">Ward Details →</button>
+                  <button class="btn-secondary !py-1 !px-3 text-xs" onclick="toggleWard('${w.ward_id}')">
+                    ${isExp ? 'Hide Rooms ▲' : `View Rooms (${wardRooms.length}) ▼`}
+                  </button>
+                </div>
+
+                <!-- Collapsible Rooms Section -->
+                ${isExp ? `
+                  <div class="mt-4 pt-3 border-t border-dashed space-y-3 fade">
+                    <p class="text-xs font-bold text-[#102A43] uppercase tracking-wider">Rooms in ${w.name}:</p>
+                    ${wardRooms.map(r => {
+                      const isRoomExp = S.expandedRooms.has(r.room_id);
+                      const roomBeds = beds.filter(b => b.room_id === r.room_id && (S.resAvailFilter === 'all' || b.status === S.resAvailFilter));
+                      const rStatusColor = r.status === 'Full' ? 'text-red-700 bg-red-50' : r.status === 'Available' ? 'text-emerald-700 bg-emerald-50' : 'text-amber-800 bg-amber-50';
+
+                      return `
+                        <div class="p-3 rounded-xl bg-white border border-slate-200">
+                          <div class="flex justify-between items-center mb-1.5">
+                            <div>
+                              <span class="font-bold text-sm text-[#102A43]">${r.name}</span>
+                              <span class="text-[11px] text-[#5a758d] ml-1">(${r.total_beds} beds: ${r.occupied_beds} occ / ${r.available_beds} free)</span>
+                            </div>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${rStatusColor}">${r.status}</span>
+                          </div>
+                          
+                          <div class="flex justify-between items-center pt-1 text-[11px]">
+                            <button class="text-[#238C91] font-medium hover:underline" onclick="openDrawer('room', '${r.room_id}')">Room Info</button>
+                            <button class="text-[#5a758d] hover:text-[#102A43] font-medium" onclick="toggleRoom('${r.room_id}')">
+                              ${isRoomExp ? 'Hide Beds ▲' : `Show Beds (${r.total_beds}) ▼`}
+                            </button>
+                          </div>
+
+                          <!-- Individual Beds inside Room -->
+                          ${isRoomExp ? `
+                            <div class="mt-2 pt-2 border-t border-slate-100 space-y-1.5">
+                              ${roomBeds.map(b => `
+                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs hover:bg-slate-100 cursor-pointer" onclick="openDrawer('bed', '${b.bed_id}')">
+                                  <div class="flex items-center gap-2">
+                                    <span class="text-[#238C91]">${ic('bed', 15)}</span>
+                                    <span class="font-bold text-[#102A43]">${b.bed_id}</span>
+                                    <span class="text-[11px] text-[#5a758d]">${b.patient_id !== '—' ? 'Patient: ' + b.patient_id : 'Vacant'}</span>
+                                  </div>
+                                  ${bedBadge(b.status)}
+                                </div>
+                              `).join('')}
+                              ${roomBeds.length === 0 ? `<p class="text-[11px] text-[#5a758d] py-1 text-center">No beds match filter.</p>` : ''}
+                            </div>
+                          ` : ''}
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- SECTION E: MEDICAL RESOURCE INVENTORY -->
+      <div class="glass p-5 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="font-bold text-lg text-[#102A43]">Medical Resource Inventory</h3>
+            <p class="text-xs text-[#5a758d]">Critical equipment, operational suites, and healthcare staffing counts</p>
+          </div>
+          <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">7 Tracked Resources</span>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${[
+            ['icu_beds', 'ICU Beds', inv.icu_beds || { total: 16, available: 2, occupied: 13, reserved: 1, utilization_pct: 81 }],
+            ['emergency_beds', 'Emergency Beds', inv.emergency_beds || { total: 30, available: 5, occupied: 23, reserved: 2, utilization_pct: 77 }],
+            ['general_beds', 'General Beds', inv.general_beds || { total: 48, available: 12, occupied: 33, reserved: 3, utilization_pct: 69 }],
+            ['ventilators', 'Ventilators', inv.ventilators || { total: 10, available: 3, occupied: 6, reserved: 1, utilization_pct: 70 }],
+            ['operating_rooms', 'Operating Rooms', inv.operating_rooms || { total: 6, available: 1, occupied: 4, reserved: 1, utilization_pct: 83 }],
+            ['doctors', 'Doctors', inv.doctors || { total: 18, available: 4, occupied: 12, reserved: 2, utilization_pct: 78 }],
+            ['nurses', 'Nurses', inv.nurses || { total: 32, available: 6, occupied: 22, reserved: 4, utilization_pct: 81 }]
+          ].map(([k, name, item]) => {
+            const u = item.utilization_pct || 0;
+            const barCls = u >= 85 ? 'red' : u >= 65 ? 'amber' : '';
+            return `
+              <div class="p-4 rounded-2xl bg-white/90 border border-slate-200">
+                <div class="flex justify-between items-start mb-2">
+                  <p class="font-bold text-[#102A43]">${name}</p>
+                  <span class="text-xs font-bold text-[#238C91]">${u}%</span>
+                </div>
+                <div class="bar mb-3"><i class="${barCls}" style="width:${u}%"></i></div>
+                <div class="grid grid-cols-4 gap-1 text-center text-xs">
+                  <div><span class="text-[#5a758d] text-[10px]">Total</span><p class="font-bold text-[#102A43]">${item.total}</p></div>
+                  <div><span class="text-emerald-700 text-[10px] font-semibold">Free</span><p class="font-bold text-emerald-700">${item.available}</p></div>
+                  <div><span class="text-red-700 text-[10px] font-semibold">In Use</span><p class="font-bold text-red-700">${item.occupied}</p></div>
+                  <div><span class="text-amber-700 text-[10px] font-semibold">Rsrv</span><p class="font-bold text-amber-700">${item.reserved}</p></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- SECTION F: PATIENT DISCHARGE DATA -->
+      <div class="glass p-5 mb-6">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-lg text-[#102A43]">Patient Discharge &amp; Capacity</h3>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border">Simulation Data</span>
+            </div>
+            <p class="text-xs text-[#5a758d]">Inpatient tracking, expected departures, and turnover availability</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-4 text-center">
+          <div class="p-3 rounded-xl bg-slate-50 border"><p class="text-xs text-[#5a758d]">Today's Admissions</p><p class="text-lg font-bold text-[#102A43] mt-0.5">${sum.current_admissions}</p></div>
+          <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200"><p class="text-xs text-emerald-800 font-semibold">Today's Discharges</p><p class="text-lg font-bold text-emerald-800 mt-0.5">${sum.today_discharges}</p></div>
+          <div class="p-3 rounded-xl bg-sky-50 border border-sky-200"><p class="text-xs text-sky-800 font-semibold">Expected Discharges</p><p class="text-lg font-bold text-sky-800 mt-0.5">${sum.expected_discharges}</p></div>
+          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200"><p class="text-xs text-amber-800 font-semibold">Pending Discharges</p><p class="text-lg font-bold text-amber-800 mt-0.5">${sum.pending_discharges}</p></div>
+          <div class="p-3 rounded-xl bg-teal-50 border border-teal-200"><p class="text-xs text-teal-800 font-semibold">Beds Becoming Free</p><p class="text-lg font-bold text-teal-800 mt-0.5">${sum.beds_expected_to_become_available}</p></div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr>
+                <th>Patient ID</th>
+                <th>Patient Name</th>
+                <th>Ward</th>
+                <th>Room</th>
+                <th>Bed</th>
+                <th>Admission Date</th>
+                <th>Expected Discharge</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${discharges.map(d => `
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="font-bold text-[#238C91]">${d.patient_id}</td>
+                  <td class="font-medium text-[#102A43]">${d.patient_name}</td>
+                  <td>${d.ward}</td>
+                  <td>${d.room}</td>
+                  <td class="font-mono text-xs">${d.bed}</td>
+                  <td class="text-[#5a758d] text-xs">${d.admission_date}</td>
+                  <td class="text-[#5a758d] text-xs">${d.expected_discharge}</td>
+                  <td>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      d.status === 'Discharged' ? 'bg-emerald-100 text-emerald-800' :
+                      d.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                      'bg-sky-100 text-sky-800'
+                    }">${d.status}</span>
+                  </td>
+                </tr>
+              `).join('')}
+              ${discharges.length === 0 ? `<tr><td colspan="8" class="text-center py-6 text-[#5a758d]">No discharge records available.</td></tr>` : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION G: CAPACITY ANALYTICS -->
+      <div class="grid md:grid-cols-2 gap-5 mb-6">
+        <div class="glass p-5">
+          <h3 class="font-bold text-sm text-[#102A43] uppercase tracking-wider mb-3">Bed Occupancy &amp; Distribution</h3>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span>Overall Occupancy Rate</span>
+                <b>${analytics.bed_occupancy_rate || 68.3}%</b>
+              </div>
+              <div class="bar"><i style="width:${analytics.bed_occupancy_rate || 68}%"></i></div>
+            </div>
+            ${(analytics.ward_utilization || []).map(wu => `
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span>${wu.name}</span>
+                  <span class="font-medium">${wu.utilization}% (${wu.status})</span>
+                </div>
+                <div class="bar"><i class="${wu.utilization >= 85 ? 'red' : wu.utilization >= 65 ? 'amber' : ''}" style="width:${wu.utilization}%"></i></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="glass p-5">
+          <h3 class="font-bold text-sm text-[#102A43] uppercase tracking-wider mb-3">Available Capacity Breakdown</h3>
+          <div class="grid grid-cols-2 gap-3 text-center mb-4">
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+              <p class="text-xs text-emerald-800 font-semibold">Immediate Available</p>
+              <p class="text-2xl font-bold text-emerald-800 mt-1">${sum.available_beds}</p>
+              <p class="text-[11px] text-emerald-700">Ready for admission</p>
+            </div>
+            <div class="p-4 rounded-xl bg-teal-50 border border-teal-200">
+              <p class="text-xs text-teal-800 font-semibold">Turnover Potential</p>
+              <p class="text-2xl font-bold text-teal-800 mt-1">${sum.beds_expected_to_become_available}</p>
+              <p class="text-[11px] text-teal-700">Expected today</p>
+            </div>
+          </div>
+          <p class="text-xs text-[#5a758d] leading-relaxed">
+            Emergency patients dispatched by the AI Planner are automatically allocated to immediate available beds across ICU, Emergency, and General wards according to acuity and specialty needs.
+          </p>
+        </div>
+      </div>
+    `;
+  },
+
+  // 3. PATIENTS & FINAL ALLOCATION VIEW
+  patients() {
+    const n = s => S.pts.filter(p => s == 'all' || p.severity == s).length;
+    const allocMap = {};
+    if (S.r && S.r.patient_allocations) {
+      S.r.patient_allocations.forEach(a => { allocMap[a.patient_id] = a; });
+    }
+
+    return `
+      <!-- Top Action Bar -->
+      <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+        <div class="flex flex-wrap gap-2 items-center">
+          ${['all', 'critical', 'serious', 'moderate'].map(s => `
+            <button class="pill ${S.f == s ? 'on' : ''}" onclick="S.f='${s}';render()">
+              ${s[0].toUpperCase() + s.slice(1)} <b class="text-[#238C91]">${n(s)}</b>
+            </button>
+          `).join('')}
+        </div>
+        <div class="flex items-center gap-2">
+          <input class="inp" placeholder="Search Patient ID..." value="${S.q}" oninput="S.q=this.value;render()">
+          <button class="btn text-xs" onclick="addPatient()">+ Add Patient</button>
+          <button class="btn bg-[#176B72] text-xs" onclick="runPlan()">${S.busy ? 'Planning...' : '▶ Run AI Planner'}</button>
+        </div>
+      </div>
+
+      <!-- Planning Status Callout -->
+      ${S.r && S.r.success ? `
+        <div class="p-4 rounded-2xl bg-[#D8F3E8] border border-emerald-300 flex items-center justify-between gap-3 mb-4 fade">
+          <div class="flex items-center gap-2 text-xs text-[#176B72]">
+            ${ic('check', 18)}
+            <span><b>AI Planner Succeeded:</b> Real Ward → Room → Bed allocations computed via <b>${S.r.algorithm}</b> (Cost: ${S.r.total_cost}). Click any patient row to view their <b>Final Allocation Card</b>.</span>
+          </div>
+          <span class="text-xs font-bold text-[#176B72] px-2.5 py-1 rounded-full bg-white">Allocated</span>
+        </div>
+      ` : S.r && !S.r.success ? `
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 mb-4 fade">
+          <b>Infeasible Scenario:</b> ${S.r.message}. Patients remain unallocated.
+        </div>
+      ` : `
+        <div class="p-3.5 rounded-2xl bg-white/70 border border-slate-200 text-xs text-[#5a758d] flex items-center justify-between mb-4">
+          <span>Patients are currently in <b>Waiting</b> status. Run the AI Planner to compute optimal <b>Ward → Room → Bed</b> allocations.</span>
+          <button class="text-[#238C91] font-semibold hover:underline" onclick="runPlan()">Execute A* Search →</button>
+        </div>
+      `}
+
+      <!-- Patient Table with Final Allocation Columns -->
+      <div class="glass p-5 overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead>
+            <tr>
+              <th>Patient ID</th>
+              <th>Patient</th>
+              <th>Severity</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Ward</th>
+              <th>Room</th>
+              <th>Bed</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${patientRows(allocMap)}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Quick Tips Box -->
+      <div class="p-4 rounded-2xl bg-white/60 border border-slate-200 text-xs text-[#5a758d] leading-relaxed">
+        <b>Academic State-Space Guarantee:</b> The assigned Ward, Room, and Bed are determined deterministically from the AI search tree replay. The heuristic function <code>h(s) = Σ w_j * d_j</code> is admissible and consistent, guaranteeing an optimal solution that minimizes patient waiting penalties.
+      </div>
+    `;
+  },
+
+  // 4. PLANNER
+  planner() {
+    const r = S.r;
+    const run = `
+      <div class="glass p-5 mb-5 flex flex-wrap gap-3 items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-[#5a758d] uppercase tracking-wider mr-1">Algorithm:</span>
+          ${[['astar', 'A* Search'], ['ucs', 'Uniform Cost (UCS)'], ['bfs', 'Breadth-First (BFS)']].map(a => `
+            <button class="pill ${S.algo == a[0] ? 'on' : ''}" onclick="S.algo='${a[0]}';render()">${a[1]}</button>
+          `).join('')}
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-[#5a758d] font-medium">${S.pts.length} patients in scenario</span>
+          <button class="btn" ${S.busy || !S.pts.length ? 'disabled' : ''} onclick="runPlan()">
+            ${S.busy ? 'Searching state space...' : 'Run Planner'}
+          </button>
+        </div>
+      </div>
+    `;
+
+    if (S.busy) return run + `<div class="glass p-12 text-center animate-pulse text-[#5a758d]"><p class="text-base font-semibold">Running state-space search...</p><p class="text-xs mt-1">Expanding frontier nodes &amp; pruning duplicates</p></div>`;
+    if (S.err) return run + `<div class="glass p-5 bg-red-50 text-red-700"><b>Could not plan:</b> ${S.err}</div>`;
+    if (!r) return run + `<div class="glass p-10 text-center text-[#5a758d]"><p class="text-base font-medium">Select an algorithm and run the planner to solve emergency allocations.</p><p class="text-xs mt-1 text-[#5a758d]">A* uses admissible heuristic h(s) = sum(w_j * d_j).</p></div>`;
+    if (!r.success) return run + `<div class="glass p-5 bg-amber-50 text-amber-900"><b>Infeasible scenario:</b> ${r.message}</div>`;
+
+    const s = r.statistics;
+    return run + `
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+        ${card('Algorithm', r.algorithm)}
+        ${card('Total Cost', r.total_cost, 'Weighted wait')}
+        ${card('States Explored', s.states_explored)}
+        ${card('Execution Time', s.execution_time_ms + ' ms')}
+        ${card('Solution Depth', s.solution_depth, 'Actions')}
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-5">
+        <div class="glass p-5 lg:col-span-2 overflow-x-auto">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <h3 class="font-bold text-lg text-[#102A43]">Recommended Allocation Plan</h3>
+              <p class="text-xs text-[#5a758d]">Step-by-step state transitions generated by ${r.algorithm}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn-secondary !py-1 !px-3 text-xs" onclick="go('patients')">View Final Allocations →</button>
+              <button class="text-xs text-[#238C91] underline font-semibold" onclick="csv()">Export CSV</button>
+            </div>
+          </div>
+          
+          <table class="w-full text-sm">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Patient</th>
+                <th>Action</th>
+                <th>Resource Slot</th>
+                <th>Reason</th>
+                <th>Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${r.plan.map(p => `
+                <tr class="hover:bg-slate-50/80">
+                  <td class="font-bold text-[#5a758d]">${p.step}</td>
+                  <td class="font-semibold text-[#238C91]">${p.patient}</td>
+                  <td>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${p.action === 'admit' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}">
+                      ${p.action.toUpperCase()}
+                    </span>
+                  </td>
+                  <td class="text-xs font-mono">${p.resource}</td>
+                  <td class="text-xs text-[#5a758d]">${p.reason}</td>
+                  <td class="font-semibold">${p.cost}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="rounded-2xl bg-[#D8F3E8] p-4 mt-4 text-xs text-[#176B72] leading-relaxed">
+            <b>Mathematical Guarantee:</b> ${r.algorithm} minimized the cumulative weighted waiting penalty <code>Cost = Σ d * Σ w_j</code>. High-acuity patients waiting longest are prioritized to achieve the lowest objective cost.
+          </div>
+        </div>
+
+        <div class="glass p-5">
+          <h3 class="font-bold text-[#102A43] mb-3">Peak Resource Utilization</h3>
+          ${Object.keys(LBL).map(k => `
+            <div class="mb-3">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium text-[#102A43]">${LBL[k]}</span>
+                <span class="text-[#5a758d]">${r.peak_usage[k] || 0} / ${r.capacity[k]}</span>
+              </div>
+              ${bar(r.peak_usage[k] || 0, r.capacity[k])}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  // 5. ANALYTICS
+  analytics() {
+    const a = S.all;
+    const mk = (l, f) => `
+      <div class="mb-4">
+        <p class="text-xs font-bold text-[#5a758d] uppercase tracking-wider mb-1.5">${l}</p>
+        ${a.map(x => `
+          <div class="flex items-center gap-2 text-sm mb-1.5">
+            <span class="w-16 font-semibold text-xs text-[#102A43]">${x.algorithm.replace('Uniform Cost Search', 'UCS')}</span>
+            <div class="bar flex-1"><i style="width:${Math.max(4, f(x) / (Math.max(...a.map(f)) || 1) * 100)}%"></i></div>
+            <span class="w-16 text-right font-mono text-xs font-semibold">${f(x)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    return `
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="glass p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-lg text-[#102A43]">Live Algorithm Benchmark</h3>
+            <span class="text-xs text-[#238C91] font-semibold">BFS vs UCS vs A*</span>
+          </div>
+          ${a && a[0].success ?
+            mk('Solution Cost (Objective)', x => x.total_cost) +
+            mk('States Explored (Search Space)', x => x.statistics.states_explored) +
+            mk('Execution Time (ms)', x => x.statistics.execution_time_ms) +
+            mk('Solution Depth (Action Steps)', x => x.statistics.solution_depth)
+            : a ? `<p class="text-sm text-[#5a758d]">${a[0].message || 'No solution for this scenario.'}</p>`
+            : `<p class="text-sm text-[#5a758d] py-8 text-center">Run the AI planner to benchmark BFS, UCS, and A*. Values are measured live on your hardware, never hardcoded.</p>`
+          }
+        </div>
+
+        <div class="glass p-5">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-lg text-[#102A43]">Execution History</h3>
+            ${S.hist.length ? `<button class="text-xs text-[#238C91] underline" onclick="S.hist=[];localStorage.hp_hist='[]';render()">Clear</button>` : ''}
+          </div>
+          ${S.hist.length ? `
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Algo</th>
+                    <th>Cost</th>
+                    <th>ms</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${S.hist.map(h => `
+                    <tr>
+                      <td>${h.sc}<br><span class="text-[10px] text-[#5a758d]">${h.t}</span></td>
+                      <td class="font-semibold">${h.algo}</td>
+                      <td class="font-bold text-[#238C91]">${h.cost}</td>
+                      <td class="font-mono text-xs">${h.ms}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `<p class="text-sm text-[#5a758d] py-8 text-center">No runs recorded yet.</p>`}
+        </div>
+      </div>
+    `;
+  }
+};
+
+// ==========================================
+// PATIENT ROWS BUILDER
+// ==========================================
+function patientRows(allocMap) {
+  const q = S.q.toLowerCase();
+  const filtered = S.pts
+    .map((p, i) => [p, i])
+    .filter(([p]) => (S.f === 'all' || p.severity === S.f) && p.id.toLowerCase().includes(q));
+
+  if (filtered.length === 0) {
+    return `<tr><td colspan="9" class="text-center py-10 text-[#5a758d]">No patients match your search. Add one to begin.</td></tr>`;
+  }
+
+  return filtered.map(([p, i]) => {
+    const alloc = allocMap[p.id];
+    const isAllocated = alloc && alloc.status === 'allocated';
+    const wardText = isAllocated ? alloc.ward : 'Not Allocated';
+    const roomText = isAllocated ? alloc.room : '—';
+    const bedText = isAllocated ? alloc.bed : '—';
+    const statusText = isAllocated ? 'Allocated' : 'Waiting';
+    const priorityText = { critical: 'High', serious: 'Medium', moderate: 'Low' }[p.severity] || 'Standard';
+
+    return `
+      <tr class="hover:bg-slate-50/70 transition-colors cursor-pointer" onclick="openPatientModal('${p.id}')">
+        <td class="font-bold text-[#238C91]">${p.id}</td>
+        <td class="font-medium text-[#102A43]">Patient ${p.id}</td>
+        <td>${badge(p.severity)}</td>
+        <td class="text-xs font-semibold ${priorityText === 'High' ? 'text-red-700' : priorityText === 'Medium' ? 'text-amber-700' : 'text-slate-600'}">
+          ${priorityText}
+        </td>
+        <td>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+            isAllocated ? 'bg-[#D8F3E8] text-[#176B72]' : 'bg-slate-100 text-slate-600'
+          }">${statusText}</span>
+        </td>
+        <td class="font-medium ${isAllocated ? 'text-[#102A43]' : 'text-[#5a758d] italic'}">${wardText}</td>
+        <td class="font-mono text-xs ${isAllocated ? 'text-[#102A43]' : 'text-[#5a758d]'}">${roomText}</td>
+        <td class="font-mono text-xs font-bold ${isAllocated ? 'text-[#238C91]' : 'text-[#5a758d]'}">${bedText}</td>
+        <td class="text-right" onclick="event.stopPropagation()">
+          <button class="text-xs text-[#238C91] font-semibold hover:underline mr-2" onclick="openPatientModal('${p.id}')">View Card</button>
+          <button class="text-slate-400 hover:text-red-600 font-bold px-1" title="Delete" onclick="deletePatient(${i})">✕</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function addPatient() {
+  const newId = 'P' + (S.pts.length + 1);
+  S.pts.push(P(newId, 'moderate', 0, 'general'));
+  render();
+}
+
+function deletePatient(idx) {
+  S.pts.splice(idx, 1);
+  render();
+}
+
+// ==========================================
+// DRAWER & MODAL MANAGEMENT
+// ==========================================
+function openDrawer(type, id) {
+  if (!S.hospital) return;
+  if (type === 'ward') {
+    const ward = S.hospital.wards.find(w => w.ward_id === id);
+    const wardRooms = S.hospital.rooms.filter(r => r.ward_id === id);
+    S.drawerItem = { type: 'ward', ward, rooms: wardRooms };
+  } else if (type === 'room') {
+    const room = S.hospital.rooms.find(r => r.room_id === id);
+    const roomBeds = S.hospital.beds.filter(b => b.room_id === id);
+    S.drawerItem = { type: 'room', room, beds: roomBeds };
+  } else if (type === 'bed') {
+    const bed = S.hospital.beds.find(b => b.bed_id === id);
+    const room = S.hospital.rooms.find(r => r.room_id === bed?.room_id);
+    S.drawerItem = { type: 'bed', bed, room };
+  }
+  render();
+}
+
+function openPatientModal(pid) {
+  const p = S.pts.find(x => x.id === pid);
+  if (!p) return;
+  const alloc = (S.r && S.r.patient_allocations) ? S.r.patient_allocations.find(a => a.patient_id === pid) : null;
+  S.selectedPatientDetail = { patient: p, allocation: alloc };
+  render();
+}
+
+function closeModal() {
+  S.drawerItem = null;
+  S.selectedPatientDetail = null;
+  render();
+}
+
+function toggleWard(wardId) {
+  if (S.expandedWards.has(wardId)) S.expandedWards.delete(wardId);
+  else S.expandedWards.add(wardId);
+  render();
+}
+
+function toggleRoom(roomId) {
+  if (S.expandedRooms.has(roomId)) S.expandedRooms.delete(roomId);
+  else S.expandedRooms.add(roomId);
+  render();
+}
+
+function renderModal() {
+  if (S.selectedPatientDetail) {
+    const { patient: p, allocation: a } = S.selectedPatientDetail;
+    const isAllocated = a && a.status === 'allocated';
+    const ward = isAllocated ? a.ward : 'Not Allocated';
+    const room = isAllocated ? a.room : '—';
+    const bed = isAllocated ? a.bed : '—';
+    const status = isAllocated ? 'Allocated' : 'Waiting';
+
+    return `
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm fade" onclick="closeModal()">
+        <div class="glass p-6 md:p-8 max-w-lg w-full rounded-3xl shadow-2xl relative" onclick="event.stopPropagation()">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">Patient Detail</span>
+              <h3 class="text-2xl font-bold text-[#102A43] mt-1">Patient ${p.id}</h3>
+            </div>
+            <button class="p-2 rounded-full hover:bg-slate-100 text-slate-500 font-bold" onclick="closeModal()">✕</button>
+          </div>
+
+          <!-- PROMINENT FINAL ALLOCATION CARD -->
+          <div class="allocation-box p-6 mb-6">
+            <div class="flex items-center justify-between mb-4 border-b border-teal-200/60 pb-2">
+              <span class="text-xs uppercase tracking-widest font-bold text-[#238C91]">FINAL ALLOCATION</span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                isAllocated ? 'bg-[#D8F3E8] text-[#176B72]' : 'bg-slate-200 text-slate-700'
+              }">${status}</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div class="p-3 rounded-xl bg-white/90 border border-teal-100 shadow-sm">
+                <p class="text-[11px] font-semibold text-[#5a758d] uppercase tracking-wider">Ward</p>
+                <p class="text-lg font-bold text-[#102A43] mt-1">${ward}</p>
+              </div>
+              <div class="p-3 rounded-xl bg-white/90 border border-teal-100 shadow-sm">
+                <p class="text-[11px] font-semibold text-[#5a758d] uppercase tracking-wider">Room</p>
+                <p class="text-lg font-bold font-mono text-[#102A43] mt-1">${room}</p>
+              </div>
+              <div class="p-3 rounded-xl bg-white/90 border border-teal-100 shadow-sm">
+                <p class="text-[11px] font-semibold text-[#5a758d] uppercase tracking-wider">Bed</p>
+                <p class="text-lg font-bold font-mono text-[#238C91] mt-1">${bed}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ALLOCATION & CLINICAL DETAILS -->
+          <div class="space-y-3 text-xs">
+            <div>
+              <p class="font-bold text-[#5a758d] uppercase tracking-wider text-[10px] mb-1">Assigned Resources</p>
+              <div class="flex flex-wrap gap-1.5">
+                ${isAllocated && a.assigned_resources && a.assigned_resources.length ?
+                  a.assigned_resources.map(r => `<span class="px-2.5 py-1 rounded-lg bg-teal-50 text-[#176B72] font-semibold border border-teal-100">${r}</span>`).join('') :
+                  '<span class="text-slate-400 italic">None assigned (Awaiting AI planner execution)</span>'
+                }
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t">
+              <div>
+                <p class="text-[#5a758d]">Severity / Priority</p>
+                <p class="font-semibold text-sm capitalize text-[#102A43]">${p.severity} / ${{critical:'High',serious:'Medium',moderate:'Low'}[p.severity]}</p>
+              </div>
+              <div>
+                <p class="text-[#5a758d]">Waiting Time</p>
+                <p class="font-semibold text-sm text-[#102A43]">${p.waiting_time} minutes</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t">
+              <div>
+                <p class="text-[#5a758d]">Treatment Protocol</p>
+                <p class="font-semibold text-sm text-[#102A43]">${isAllocated ? a.treatment : 'Standard Emergency Triage'}</p>
+              </div>
+              <div>
+                <p class="text-[#5a758d]">Planning Cost</p>
+                <p class="font-semibold text-sm text-[#238C91]">${isAllocated ? a.cost : '—'}</p>
+              </div>
+            </div>
+
+            ${isAllocated && a.reason ? `
+              <div class="p-3 rounded-xl bg-slate-50 border text-[11px] text-[#5a758d] mt-3">
+                <b>Decision Rationale:</b> ${a.reason}
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="mt-6 pt-4 border-t flex justify-end">
+            <button class="btn text-xs" onclick="closeModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (S.drawerItem) {
+    const { type, ward, rooms, room, beds, bed } = S.drawerItem;
+    return `
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm fade" onclick="closeModal()">
+        <div class="glass p-6 md:p-8 max-w-lg w-full rounded-3xl shadow-2xl relative" onclick="event.stopPropagation()">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase tracking-wider">${type} Detail</span>
+              <h3 class="text-2xl font-bold text-[#102A43] mt-1">${ward?.name || room?.name || bed?.bed_id}</h3>
+            </div>
+            <button class="p-2 rounded-full hover:bg-slate-100 text-slate-500 font-bold" onclick="closeModal()">✕</button>
+          </div>
+
+          ${type === 'ward' ? `
+            <div class="space-y-3 text-xs">
+              <div class="grid grid-cols-3 gap-2 text-center p-3 rounded-xl bg-slate-50 border">
+                <div><p class="text-[#5a758d]">Rooms</p><p class="text-lg font-bold text-[#102A43]">${ward.total_rooms}</p></div>
+                <div><p class="text-[#5a758d]">Beds</p><p class="text-lg font-bold text-[#102A43]">${ward.total_beds}</p></div>
+                <div><p class="text-[#5a758d]">Utilization</p><p class="text-lg font-bold text-[#238C91]">${ward.utilization_pct}%</p></div>
+              </div>
+              <p class="font-bold text-[#102A43] pt-2">Rooms in this ward (${rooms.length}):</p>
+              <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                ${rooms.map(r => `
+                  <div class="flex justify-between items-center p-2 rounded-lg bg-white border text-xs">
+                    <span class="font-semibold text-[#102A43]">${r.name}</span>
+                    <span class="text-[#5a758d]">${r.occupied_beds} occ / ${r.available_beds} free</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : type === 'room' ? `
+            <div class="space-y-3 text-xs">
+              <div class="grid grid-cols-3 gap-2 text-center p-3 rounded-xl bg-slate-50 border">
+                <div><p class="text-[#5a758d]">Ward</p><p class="text-sm font-bold text-[#102A43]">${room.ward_name}</p></div>
+                <div><p class="text-[#5a758d]">Total Beds</p><p class="text-lg font-bold text-[#102A43]">${room.total_beds}</p></div>
+                <div><p class="text-[#5a758d]">Status</p><p class="text-sm font-bold text-[#238C91]">${room.status}</p></div>
+              </div>
+              <p class="font-bold text-[#102A43] pt-2">Beds in ${room.name}:</p>
+              <div class="space-y-1.5">
+                ${beds.map(b => `
+                  <div class="flex justify-between items-center p-2 rounded-lg bg-white border text-xs">
+                    <span class="font-bold text-[#102A43]">${b.bed_id}</span>
+                    <span class="text-[#5a758d]">Patient: ${b.patient_id}</span>
+                    ${bedBadge(b.status)}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : `
+            <div class="space-y-3 text-xs">
+              <div class="p-4 rounded-xl bg-slate-50 border space-y-2">
+                <div class="flex justify-between"><span>Bed ID:</span> <b class="font-mono text-[#238C91]">${bed.bed_id}</b></div>
+                <div class="flex justify-between"><span>Ward:</span> <b class="text-[#102A43]">${bed.ward_name}</b></div>
+                <div class="flex justify-between"><span>Room:</span> <b class="font-mono text-[#102A43]">${bed.room_id}</b></div>
+                <div class="flex justify-between items-center"><span>Status:</span> ${bedBadge(bed.status)}</div>
+                <div class="flex justify-between"><span>Current Patient:</span> <b class="text-[#102A43]">${bed.patient_id}</b></div>
+              </div>
+            </div>
+          `}
+
+          <div class="mt-6 pt-4 border-t flex justify-end">
+            <button class="btn text-xs" onclick="closeModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return '';
+}
+
+// ==========================================
+// API & NETWORK CALLS
+// ==========================================
+async function post(u, b) {
+  const r = await fetch(u, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(b)
+  });
+  const j = await r.json();
+  if (!r.ok) {
+    throw new Error(Array.isArray(j.detail) ? j.detail.map(d => d.loc.slice(1).join('.') + ': ' + d.msg).join('; ') : j.detail);
+  }
+  return j;
+}
+
+async function runPlan() {
+  S.busy = true;
+  S.err = '';
+  render();
+  try {
+    const b = { patients: S.pts, resources: S.res, algorithm: S.algo };
+    const [r, all] = await Promise.all([post('/api/plan', b), post('/api/compare', b)]);
+    S.r = r;
+    S.all = all;
+
+    if (r.success) {
+      S.hist.unshift({
+        t: new Date().toLocaleTimeString(),
+        sc: S.preset,
+        algo: r.algorithm,
+        cost: r.total_cost,
+        ms: r.statistics.execution_time_ms
+      });
+      S.hist = S.hist.slice(0, 15);
+      localStorage.hp_hist = JSON.stringify(S.hist);
+
+      // Re-fetch hospital to update capacities dynamically based on allocated patients
+      await fetchHospital();
+    }
+  } catch (e) {
+    S.err = e.message;
+    S.r = null;
+  }
+  S.busy = false;
+  render();
+}
+
+function csv() {
+  if (!S.r || !S.r.plan) return;
+  const l = [
+    'step,patient,action,resource,reason,cost',
+    ...S.r.plan.map(p => [p.step, p.patient, p.action, `"${p.resource}"`, `"${p.reason}"`, p.cost].join(','))
+  ];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([l.join('\n')], { type: 'text/csv' }));
+  a.download = 'emergency_allocation_plan.csv';
+  a.click();
+}
+
+// Check backend health & initialize hospital capacity
+fetch('/api/health')
+  .then(r => { S.online = r.ok; })
+  .catch(() => { S.online = false; })
+  .finally(() => {
+    fetchHospital();
+    render();
+  });
+render();
+</script>
+</body>
+</html>
